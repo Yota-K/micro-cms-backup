@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  micro-cms-backup:
+    container_name: micro-cms-backup
+    build: .
+    ports:
+      - 8080:8080
+    stdin_open: true
+    tty: true
+    environment:
+      - API_KEY=${API_KEY}
+      - ENDPOINT=${ENDPOINT}
+    volumes:
+      - ./app:/go/src/app
