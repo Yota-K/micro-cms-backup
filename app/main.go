@@ -2,21 +2,30 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"io/ioutil"
 	"log"
-	_ "encoding/json"
+	"net/http"
 
 	"github.com/micro-cms-backup/config"
 )
 
 func main() {
+	result, err := reqApi()
+	if err != nil {
+		log.Fatal(err)
+		panic(err.Error())
+	}
+	fmt.Println(string(*result))
+}
+
+func reqApi() (*[]byte, error) {
 	API_KEY, ENDPOINT := config.Init()
 
 	// リクエストを作成
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/blogs", ENDPOINT), nil)
 	if err != nil {
-		log.Fatal("request error")
+		log.Fatal(err)
+		return nil, err
 	}
 
 	req.Header.Set("X-API-KEY", API_KEY)
@@ -24,15 +33,13 @@ func main() {
 	// リクエストを実行
 	res, err := new(http.Client).Do(req)
 	if err != nil {
-		log.Fatal("response error")
+		log.Fatal(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	// レスポンスの読み込み
 	byteAry, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal("Read error")
-	}
 
-	fmt.Println(string(byteAry))
+	return &byteAry, err
 }
