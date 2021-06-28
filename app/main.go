@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/micro-cms-backup/config"
 )
@@ -71,10 +74,31 @@ func createCsv(jsonBytes *[]byte) {
 		return
 	}
 
-	// MEMO: ループ内でCSVの書き込みを行うイメージ
+	// ファイル名の生成
+	const timeFmt = "20060102"
+	nowTime := time.Now().Format(timeFmt)
+	filename := fmt.Sprintf("micro-cms-backup%s.csv", nowTime)
+
+	csvfile, _ := os.Create(filename)
+	defer csvfile.Close()
+	writer := csv.NewWriter(csvfile)
+
+	// ヘッダ行の書き込み処理
+	writer.Write([]string{"id", "title", "body", "description"})
+
+	// ループ内でCSVの書き込みを行う
 	for _, blog := range blogs.Contents {
-		fmt.Printf("id: %s\n", blog.Id)
-		fmt.Printf("title: %s\n", blog.Title)
-		fmt.Print("\n")
+		record := []string{blog.Id, blog.Title, blog.Body, blog.Description}
+
+		if err := writer.Write(record); err != nil {
+			log.Fatal(err)
+		}
+		writer.Write(record)
+	}
+
+	writer.Flush()
+
+	if err := writer.Error(); err != nil {
+		log.Fatal(err)
 	}
 }
